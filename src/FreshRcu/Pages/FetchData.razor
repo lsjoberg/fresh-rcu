@@ -1,0 +1,82 @@
+﻿@page "/"
+@using FreshRcu.HeatPumpLogs
+@using FreshRcu.Rcu
+@inject RcuLogService RcuLogService
+
+<PageTitle>RCU Log</PageTitle>
+
+<h1>RCU Log</h1>
+
+<p>Fetch the log from the RCU directly.</p>
+
+@if (_log == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>From</th>
+            <th>To</th>
+            <th>Heating Curve</th>
+            <th>Power Consumption (kWh)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var consumptionHour in _log.GetConsumptionPerHour().OrderByDescending(hour => hour.From))
+        {
+            <tr>
+                <td>@consumptionHour.From.ToShortDateString() @consumptionHour.From.ToShortTimeString()</td>
+                <td>@consumptionHour.To.ToShortDateString() @consumptionHour.To.ToShortTimeString()</td>
+                <td>@string.Join(", ", consumptionHour.HeatingCurves)</td>
+                <td>@consumptionHour.KiloWattHours.ToString("N")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    
+   <table class="table">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Hot Water Temperature</th>
+            <th>Supply Temperature</th>
+            <th>Calculated Supply Temperature</th>
+            <th>Return Temperature</th>
+            <th>Heating Curve</th>
+            <th>Degree Minutes</th>
+            <th>Power consumption (w)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var logRow in _log.Rows.OrderByDescending(row => row.Timestamp))
+        {
+            <tr>
+                <td>@logRow.Timestamp.ToShortDateString() @logRow.Timestamp.ToShortTimeString()</td>
+                <td>@logRow.HotWaterTemperature</td>
+                <td>@logRow.SupplyTemperature</td>
+                <td>@logRow.CalculatedSupplyTemperature</td>
+                <td>@logRow.ReturnTemperature</td>
+                <td>@logRow.HeatingCurveDisplay</td>
+                <td>@logRow.DegreeMinutes</td>
+                <td>@logRow.PowerConsumption</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HeatPumpLog? _log;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _log = await RcuLogService.FetchRcuLog();
+        var test = _log.GetConsumptionPerHour();
+    }
+
+}
