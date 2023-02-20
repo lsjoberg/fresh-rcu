@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using FreshRcu.Data;
 using FreshRcu.Rcu;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +9,6 @@ builder.Services.AddSingleton<RcuLogService>();
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
 
 var app = builder.Build();
 
