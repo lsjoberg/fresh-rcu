@@ -42,7 +42,16 @@ public class RcuParser
             logRow.ReturnTemperature = csvRow.GetDecimal("M2.7");
             logRow.DegreeMinutes = csvRow.GetDecimal("M2.8");
             
+            // Temperature
+            logRow.OutsideTemperature = csvRow.GetDecimal("M4.0");
+            logRow.OutsideAverageTemperature = csvRow.GetDecimal("M4.1");
+            
             // Inverter
+            logRow.NumberOfInverterStarts = csvRow.GetInt("M5.6");
+            var inverterMinutes = csvRow.GetInt("M5.9", 0);
+            var inverterHours = csvRow.GetInt("M5.9", 1);
+            logRow.InverterTotalTime = TimeSpan.FromHours(inverterHours)
+                                       + TimeSpan.FromMinutes(inverterMinutes);
             logRow.PowerConsumption = csvRow.GetDecimal("M5.12.2");
 
             log.Rows.Add(logRow);

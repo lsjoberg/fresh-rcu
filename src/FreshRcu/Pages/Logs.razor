@@ -1,0 +1,59 @@
+﻿@page "/logs"
+@using FreshRcu.HeatPumpLogs
+@using FreshRcu.Rcu
+@inject RcuLogService RcuLogService
+
+<PageTitle>Logs</PageTitle>
+
+<h1>Logs</h1>
+
+@if (_log == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+   <table class="table">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Hot Water Temperature</th>
+            <th>Supply Temperature (Calculated)</th>
+            <th>Return Temperature</th>
+            <th>Delta T</th>
+            <th>Heating Curve</th>
+            <th>Degree Minutes</th>
+            <th>Outside temperature (avg)</th>
+            <th>Inverter Power consumption (w)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var logRow in _log.Rows.OrderByDescending(row => row.Timestamp).Take(360))
+        {
+            <tr>
+                <td>@logRow.Timestamp.ToShortDateString() @logRow.Timestamp.ToShortTimeString()</td>
+                <td>@logRow.HotWaterTemperature.ToString("N1")</td>
+                <td>@logRow.SupplyTemperature.ToString("N1") (@logRow.CalculatedSupplyTemperature.ToString("N1"))</td>
+                <td>@logRow.ReturnTemperature.ToString("N1")</td>
+                <td>@logRow.SupplyReturnDeltaT.ToString("N1")</td>
+                <td>@logRow.HeatingCurveDisplay</td>
+                <td>@logRow.DegreeMinutes</td>
+                <td>@logRow.OutsideTemperature.ToString("N1") (@logRow.OutsideAverageTemperature.ToString("N1"))</td>
+                <td>@logRow.PowerConsumption</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HeatPumpLog? _log;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _log = await RcuLogService.FetchRcuLog();
+    }
+
+}

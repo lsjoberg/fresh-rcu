@@ -1,0 +1,49 @@
+﻿@page "/inverter-time"
+@using FreshRcu.HeatPumpLogs
+@using FreshRcu.Rcu
+@inject RcuLogService RcuLogService
+
+<PageTitle>Inverter Time</PageTitle>
+
+<h1>Inverter Time</h1>
+
+@if (_log == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+            <thead>
+            <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Length</th>
+                <th>Power consumption (kwh)</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var period in _log.GetInverterOnPeriods().OrderByDescending(row => row.From))
+            {
+                <tr>
+                    <td>@period.From</td>
+                    <td>@period.To</td>
+                    <td>@(period.To - period.From)</td>
+                    <td>@period.KiloWattHours.ToString("N")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+}
+
+@code {
+    private HeatPumpLog? _log;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _log = await RcuLogService.FetchRcuLog();
+    }
+
+}

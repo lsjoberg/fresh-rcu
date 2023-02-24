@@ -4,16 +4,17 @@ namespace FreshRcu.Rcu;
 
 public class RcuLogService
 {
-    private readonly RcuClient _rcuClient;
+    private readonly IRcuLogFetcher _rcuLogFetcher;
 
-    public RcuLogService(RcuClient rcuClient)
+    public RcuLogService(IRcuLogFetcher rcuLogFetcher)
     {
-        _rcuClient = rcuClient;
+        _rcuLogFetcher = rcuLogFetcher;
     }
 
     public async Task<HeatPumpLog> FetchRcuLog()
     {
-        var csvData = await _rcuClient.GetLogCsv();
+        var csvData = await _rcuLogFetcher.GetLogCsv();
+        await File.WriteAllTextAsync("logfile.csv", csvData);
         var parser = new RcuParser(csvData);
         return parser.Run();
     }

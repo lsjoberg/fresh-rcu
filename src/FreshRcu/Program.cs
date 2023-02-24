@@ -4,7 +4,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOptions<RcuOptions>()
     .Bind(builder.Configuration.GetSection("Rcu"));
-builder.Services.AddSingleton<RcuClient>();
+if (builder.Configuration.GetValue<bool>("Rcu:FetchFromFile"))
+{
+    builder.Services.AddSingleton<IRcuLogFetcher, RcuLogFileFetcher>();
+}
+else
+{
+    builder.Services.AddSingleton<IRcuLogFetcher, RcuLogHttpFetcher>();    
+}
+
 builder.Services.AddSingleton<RcuLogService>();
 
 builder.Services.AddRazorPages();

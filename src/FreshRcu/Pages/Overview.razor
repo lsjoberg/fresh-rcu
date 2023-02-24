@@ -1,0 +1,119 @@
+﻿@page "/"
+@using FreshRcu.HeatPumpLogs
+@using FreshRcu.Rcu
+@inject RcuLogService RcuLogService
+
+<PageTitle>Overview</PageTitle>
+
+@if (_log == null || _currentState == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <h1>Current stats</h1>    
+        </div>
+        <div class="col-md-6">
+            <button class="btn btn-primary float-end" @onclick="Reload">Refresh</button>
+        </div>
+    </div>
+    
+    <ul>
+        <li>
+            Inverter:
+            @if (_currentState.InverterOn)
+            {
+                <span class="text-success">On</span>   
+            }
+            else
+            {
+                <span class="text-danger">Off</span>
+            }
+        </li>
+        <li>Hot water temperature: @_currentState.HotWaterTemperature</li>
+        <li>Supply temperature: @_currentState.SupplyTemperature (@_currentState.CalculatedSupplyTemperature) (&Delta; @(_currentState.SupplyCalculatedDelta))</li>
+        <li>Return temperature: @_currentState.ReturnTemperature (&Delta; @_currentState.SupplyReturnDeltaT)</li>
+        <li>Degree minutes: @_currentState.DegreeMinutes</li>
+        @if (_currentState.InverterOn)
+        {
+            <li>Remaining time until stop: @Math.Round(_currentState.CalculatedRemainingTimeOn.TotalMinutes, 0) minutes</li>    
+        }
+        <li>Outside temperature: @_currentState.OutsideTemperature</li>
+        <li>Heating curve: @_currentState.HeatingCurveDisplay</li>
+    </ul>
+    <h1>Daily summary</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Time</th>
+            <th>Heating Curve</th>
+            <th>Outside Temp</th>
+            <th>Starts</th>
+            <th>Inverter Time</th>
+            <th>Consumption (kWh)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var period in _log.GetDailyPeriods().OrderByDescending(hour => hour.From))
+        {
+            <tr>
+                <td>@period.From.ToShortDateString() @period.From.ToShortTimeString()-@period.To.ToShortTimeString()</td>
+                <td>@string.Join(", ", period.HeatingCurves)</td>
+                <td>@period.AverageOutsideTemperature</td>
+                <td>@period.NumberOfInverterStarts</td>
+                <td>@period.InverterOnTime</td>
+                <td>@period.KiloWattHours.ToString("N1")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    
+    <h1>Last 24 hours</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Time</th>
+            <th>Heating Curve</th>
+            <th>Outside Temp</th>
+            <th>Starts</th>
+            <th>Inverter Time</th>
+            <th>Consumption (kWh)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var period in _log.GetHourlyPeriods().OrderByDescending(hour => hour.From).Take(24))
+        {
+            <tr>
+                <td>@period.From.ToShortDateString() @period.From.ToShortTimeString()-@period.To.ToShortTimeString()</td>
+                <td>@string.Join(", ", period.HeatingCurves)</td>
+                <td>@period.AverageOutsideTemperature</td>
+                <td>@period.NumberOfInverterStarts</td>
+                <td>@period.InverterOnTime</td>
+                <td>@period.KiloWattHours.ToString("N1")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HeatPumpLog? _log;
+    private HeatPumpLogRow? _currentState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _log = await RcuLogService.FetchRcuLog();
+        _currentState = _log.Rows.OrderBy(row => row.Timestamp).Last();
+    }
+
+    private async Task Reload()
+    {
+        _log = null;
+        _log = await RcuLogService.FetchRcuLog();
+        _currentState = _log.Rows.OrderBy(row => row.Timestamp).Last();
+    }
+}

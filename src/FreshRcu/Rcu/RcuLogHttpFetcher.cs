@@ -3,11 +3,11 @@ using Microsoft.Extensions.Options;
 
 namespace FreshRcu.Rcu;
 
-public class RcuClient
+public class RcuLogHttpFetcher : IRcuLogFetcher
 {
     private readonly HttpClient _rcuHttpClient;
 
-    public RcuClient(IOptions<RcuOptions> rcuOptions)
+    public RcuLogHttpFetcher(IOptions<RcuOptions> rcuOptions)
     {
         var httpClient = new HttpClient();
         httpClient.BaseAddress = new Uri($"http://{rcuOptions.Value.Host}");
